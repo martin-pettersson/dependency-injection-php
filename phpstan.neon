@@ -1,0 +1,8 @@
+parameters:
+    phpVersion: 80300
+    level: 9
+    treatPhpDocTypesAsCertain: false
+    paths:
+        - src
+    ignoreErrors:
+        - identifier: missingType.iterableValue
