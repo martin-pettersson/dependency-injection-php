@@ -14,6 +14,9 @@ namespace N7e\DependencyInjection;
 use Psr\Container\ContainerExceptionInterface;
 use RuntimeException;
 
-class MissingDependencyIdentifierException extends RuntimeException implements ContainerExceptionInterface
+/**
+ * Represents a generic container exception.
+ */
+class ContainerException extends RuntimeException implements ContainerExceptionInterface
 {
 }

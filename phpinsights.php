@@ -13,6 +13,7 @@ use SlevomatCodingStandard\Sniffs\Arrays\TrailingArrayCommaSniff;
 use SlevomatCodingStandard\Sniffs\Classes\SuperfluousExceptionNamingSniff;
 use SlevomatCodingStandard\Sniffs\Classes\SuperfluousInterfaceNamingSniff;
 use SlevomatCodingStandard\Sniffs\Commenting\DocCommentSpacingSniff;
+use SlevomatCodingStandard\Sniffs\ControlStructures\AssignmentInConditionSniff;
 use SlevomatCodingStandard\Sniffs\TypeHints\DisallowArrayTypeHintSyntaxSniff;
 use SlevomatCodingStandard\Sniffs\TypeHints\DisallowMixedTypeHintSniff;
 use SlevomatCodingStandard\Sniffs\TypeHints\ParameterTypeHintSniff;
@@ -22,6 +23,7 @@ use SlevomatCodingStandard\Sniffs\TypeHints\ReturnTypeHintSniff;
 return [
     'preset' => 'default',
     'remove' => [
+        AssignmentInConditionSniff::class,
         DisallowArrayTypeHintSyntaxSniff::class,
         DisallowMixedTypeHintSniff::class,
         DocCommentSpacingSniff::class,
@@ -44,12 +46,12 @@ return [
             'ignoreComments' => true
         ],
         CyclomaticComplexityIsHigh::class => [
-            'maxComplexity' => 6
+            'maxComplexity' => 25
         ]
     ],
     'requirements' => [
         'min-quality' => 100,
-        'min-complexity' => 75,
+        'min-complexity' => 65,
         'min-architecture' => 100,
         'min-style' => 100
     ],

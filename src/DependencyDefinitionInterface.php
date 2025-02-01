@@ -55,7 +55,7 @@ interface DependencyDefinitionInterface
      *
      * @param string $alias Arbitrary alias.
      * @return \N7e\DependencyInjection\DependencyDefinitionInterface Same instance for method chaining.
-     * @throws \N7e\DependencyInjection\DuplicateDependencyIdentifierException
+     * @throws \N7e\DependencyInjection\DuplicateIdentifierException
      *     If a dependency for the given alias is already configured.
      */
     public function alias(string $alias): DependencyDefinitionInterface;

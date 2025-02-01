@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace N7e\DependencyInjection;
 
 use ReflectionClass;
+use ReflectionException;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionNamedType;
@@ -30,11 +31,32 @@ class Container implements ContainerInterface
     private array $dependencies;
 
     /**
-     * Stack of dependencies being resolved.
+     * Produced singleton dependency values.
+     *
+     * @var array
+     */
+    private array $singletonDependencyValues;
+
+    /**
+     * Produced scoped dependency values.
+     *
+     * @var array
+     */
+    private array $scopedDependencyValues;
+
+    /**
+     * Stack of dependencies being resolved using `::get()`.
      *
      * @var string[]
      */
-    private array $dependencyStack;
+    private array $getDependencyStack;
+
+    /**
+     * Stack of dependencies being resolved using `::construct()`.
+     *
+     * @var string[]
+     */
+    private array $constructDependencyStack;
 
     /**
      * Create a new container instance.
@@ -44,66 +66,85 @@ class Container implements ContainerInterface
     public function __construct(array $dependencies)
     {
         $this->dependencies = $dependencies;
-        $this->dependencyStack = [];
+        $this->getDependencyStack = [];
+        $this->constructDependencyStack = [];
+        $this->singletonDependencyValues = [];
+        $this->scopedDependencyValues = [];
     }
 
     /** {@inheritDoc} */
     public function has($id): bool
     {
-        return ! is_null($this->dependencyFor($id));
+        return ! is_null($this->dependencyDefinitionFor($id));
     }
 
     /** {@inheritDoc} */
     public function get($id)
     {
-        $dependency = $this->dependencyFor($id);
+        $definition = $this->dependencyDefinitionFor($id);
 
-        if (is_null($dependency)) {
-            throw new DependencyNotFoundException($id);
+        if (is_null($definition)) {
+            throw new NotFoundException("Dependency definition for '{$id}' not found");
         }
 
-        if (in_array($dependency->identifier(), $this->dependencyStack, true)) {
-            throw new CircularDependencyReferenceException($dependency->identifier());
+        if (in_array($definition->identifier(), $this->getDependencyStack, true)) {
+            $this->getDependencyStack = [];
+
+            throw new CircularReferenceException($definition->identifier());
         }
 
-        $this->dependencyStack[] = $dependency->identifier();
+        if (! is_null($cachedValue = $this->cached($definition))) {
+            return $cachedValue;
+        }
 
-        $value = $this->invoke($dependency->factory(), $this, []);
+        $this->ensureLifetimeExpectancyOf($definition);
+        $this->getDependencyStack[] = $definition->identifier();
 
-        array_pop($this->dependencyStack);
+        try {
+            $value = $this->invoke($definition->factory(), $this, []);
 
-        return $value;
+            $this->cache($value, $definition);
+
+            return $value;
+        } finally {
+            array_pop($this->getDependencyStack);
+        }
     }
 
     /** {@inheritDoc} */
     public function construct(string $className, ...$parameters)
     {
-        if (in_array($className, $this->dependencyStack, true)) {
-            throw new CircularDependencyReferenceException($className);
+        if (in_array($className, $this->constructDependencyStack, true)) {
+            $this->constructDependencyStack = [];
+
+            throw new CircularReferenceException($className);
         }
 
-        $this->dependencyStack[] = $className;
+        $this->constructDependencyStack[] = $className;
 
-        $reflection = new ReflectionClass($className);
+        try {
+            $reflection = new ReflectionClass($className);
 
-        if (! $reflection->isInstantiable()) {
-            // TODO Throw relevant exception.
+            if (! $reflection->isInstantiable()) {
+                throw new ContainerException("{$className} is not instantiable");
+            }
+
+            $constructor = $reflection->getConstructor();
+
+            return is_null($constructor) ?
+                $reflection->newInstance() :
+                $reflection->newInstanceArgs($this->resolveParametersFor($constructor, $parameters));
+        } catch (ReflectionException $exception) {
+            throw new ContainerException($exception->getMessage(), $exception->getCode(), $exception);
+        } finally {
+            array_pop($this->constructDependencyStack);
         }
-
-        $constructor = $reflection->getConstructor();
-
-        $instance = is_null($constructor) ?
-            $reflection->newInstance() :
-            $reflection->newInstanceArgs($this->resolveParametersFor($constructor, $parameters));
-
-        array_pop($this->dependencyStack);
-
-        return $instance;
     }
 
     /** {@inheritDoc} */
     public function invoke(callable $callable, ...$parameters)
     {
+        // The 'callable' type hint ensures that only existing functions can be passed.
         $reflection = new ReflectionFunction($callable(...));
 
         if ($reflection->getNumberOfParameters() === 0) {
@@ -113,13 +154,19 @@ class Container implements ContainerInterface
         return $reflection->invokeArgs($this->resolveParametersFor($reflection, $parameters));
     }
 
+    /** {@inheritdoc} */
+    public function beginScope(): void
+    {
+        $this->scopedDependencyValues = [];
+    }
+
     /**
      * Find a dependency for a given identifier.
      *
      * @param string $identifier Arbitrary identifier.
      * @return \N7e\DependencyInjection\DependencyDefinition|null Dependency definition instance if found.
      */
-    private function dependencyFor(string $identifier): ?DependencyDefinition
+    private function dependencyDefinitionFor(string $identifier): ?DependencyDefinition
     {
         foreach ($this->dependencies as $dependency) {
             if ($dependency->identifier() === $identifier || in_array($identifier, $dependency->aliases(), true)) {
@@ -136,13 +183,10 @@ class Container implements ContainerInterface
      * @param \ReflectionFunctionAbstract $callable Arbitrary callable reflection.
      * @param array $parameters Known parameters.
      * @return array Resolved parameters.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function resolveParametersFor(ReflectionFunctionAbstract $callable, array $parameters): array
     {
-        if ($callable->getNumberOfParameters() === count($parameters)) {
-            return $parameters;
-        }
-
         return array_map(
             fn($parameter) => array_key_exists($parameter->getPosition(), $parameters) ?
                 $parameters[$parameter->getPosition()] :
@@ -156,7 +200,7 @@ class Container implements ContainerInterface
      *
      * @param \ReflectionParameter $parameter Arbitrary parameter reflection.
      * @return mixed Parameter value.
-     * @throws \N7e\DependencyInjection\DependencyNotFoundException
+     * @throws \Psr\Container\NotFoundExceptionInterface
      * @throws \Psr\Container\ContainerExceptionInterface
      */
     private function resolve(ReflectionParameter $parameter)
@@ -168,7 +212,7 @@ class Container implements ContainerInterface
         /**
          * Parameter inject attribute reflection instance.
          *
-         * @var \ReflectionAttribute|false $attribute
+         * @var \ReflectionAttribute<\N7e\DependencyInjection\Inject>|false $attribute
          */
         $attribute = current($parameter->getAttributes(Inject::class));
 
@@ -179,9 +223,67 @@ class Container implements ContainerInterface
         $type = $parameter->getType();
 
         if (is_null($type) || ($type instanceof ReflectionNamedType && $type->isBuiltin())) {
-            throw new DependencyNotFoundException("{$parameter->getType()} \${$parameter->getName()}");
+            throw new NotFoundException("Value for parameter '\${$parameter->getName()}' could not be resolved");
         }
 
-        return $this->get((string) $type);
+        $identifier = (string) $type;
+
+        return $this->has($identifier) ? $this->get($identifier) : $this->construct($identifier);
+    }
+
+    /**
+     * Ensure lifetime expectancy of a given dependency definition.
+     *
+     * This ensures that a singleton cannot have transient dependencies. That
+     * would defeat the purpose of a transient dependency.
+     *
+     * @param \N7e\DependencyInjection\DependencyDefinition $definition Arbitrary dependency definition.
+     * @throws \N7e\DependencyInjection\LifetimeViolationException
+     */
+    private function ensureLifetimeExpectancyOf(DependencyDefinition $definition): void
+    {
+        foreach ($this->getDependencyStack as $identifier) {
+            if ($definition->lifetime() < $this->dependencyDefinitionFor($identifier)?->lifetime()) {
+                $this->getDependencyStack = [];
+
+                throw new LifetimeViolationException($definition->identifier());
+            }
+        }
+    }
+
+    /**
+     * Produce cached value if found.
+     *
+     * @param \N7e\DependencyInjection\DependencyDefinition $definition Arbitrary dependency definition.
+     * @return mixed|null Cached value if found.
+     */
+    private function cached(DependencyDefinition $definition)
+    {
+        if (array_key_exists($definition->identifier(), $this->singletonDependencyValues)) {
+            return $this->singletonDependencyValues[$definition->identifier()];
+        }
+
+        if (array_key_exists($definition->identifier(), $this->scopedDependencyValues)) {
+            return $this->scopedDependencyValues[$definition->identifier()];
+        }
+
+        return null;
+    }
+
+    /**
+     * Cache value if appropriate.
+     *
+     * @param mixed $value Arbitrary value.
+     * @param \N7e\DependencyInjection\DependencyDefinition $definition Arbitrary dependency definition.
+     */
+    private function cache($value, DependencyDefinition $definition): void
+    {
+        if ($definition->lifetime() === DependencyLifetime::SINGLETON) {
+            $this->singletonDependencyValues[$definition->identifier()] = $value;
+        }
+
+        if ($definition->lifetime() === DependencyLifetime::SCOPED) {
+            $this->scopedDependencyValues[$definition->identifier()] = $value;
+        }
     }
 }

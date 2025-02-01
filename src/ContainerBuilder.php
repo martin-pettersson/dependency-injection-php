@@ -32,13 +32,13 @@ class ContainerBuilder implements ContainerBuilderInterface
     }
 
     /** {@inheritDoc} */
-    public function addClass(string $class_name): DependencyDefinitionInterface
+    public function addClass(string $className): DependencyDefinitionInterface
     {
-        $this->assertAvailabilityOf($class_name);
+        $this->assertAvailabilityOf($className);
 
         $dependency = new DependencyDefinition(
-            $class_name,
-            static fn($container, $parameters) => $container->construct($class_name, ...$parameters),
+            $className,
+            static fn($container, $parameters) => $container->construct($className, ...$parameters),
             $this
         );
 
@@ -85,14 +85,14 @@ class ContainerBuilder implements ContainerBuilderInterface
      * Assert the availability of a given identifier.
      *
      * @param string $identifier Arbitrary identifier.
-     * @throws \N7e\DependencyInjection\DuplicateDependencyIdentifierException
+     * @throws \N7e\DependencyInjection\DuplicateIdentifierException
      *     If a dependency with the given identifier is already configured.
      */
     public function assertAvailabilityOf(string $identifier): void
     {
         foreach ($this->dependencies as $dependency) {
             if ($dependency->identifier() === $identifier || in_array($identifier, $dependency->aliases(), true)) {
-                throw new DuplicateDependencyIdentifierException($identifier);
+                throw new DuplicateIdentifierException($identifier);
             }
         }
     }

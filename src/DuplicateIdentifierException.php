@@ -14,6 +14,10 @@ namespace N7e\DependencyInjection;
 use Psr\Container\ContainerExceptionInterface;
 use RuntimeException;
 
-class DependencyLifetimeException extends RuntimeException implements ContainerExceptionInterface
+/**
+ * Represents an exception thrown when attempting to add a dependency identifier
+ * or alias that is already configured.
+ */
+class DuplicateIdentifierException extends RuntimeException implements ContainerExceptionInterface
 {
 }

@@ -26,11 +26,12 @@ interface ContainerInterface extends \Psr\Container\ContainerInterface
      * @param mixed ...$parameters
      *     Arbitrary set of parameters to pass to the constructor.
      * @return mixed Class instance.
-     * @throws \N7e\DependencyInjection\CircularDependencyReferenceException
+     * @throws \N7e\DependencyInjection\CircularReferenceException
      *     When attempting to inject a dependency with a circular reference.
-     * @throws \N7e\DependencyInjection\DependencyNotFoundException When a required dependency cannot be resolved.
-     * @throws \N7e\DependencyInjection\DependencyLifetimeException
+     * @throws \N7e\DependencyInjection\NotFoundException When a required dependency cannot be resolved.
+     * @throws \N7e\DependencyInjection\LifetimeViolationException
      *     When attempting to inject a dependency with a shorter lifetime.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function construct(string $className, ...$parameters);
 
@@ -40,11 +41,19 @@ interface ContainerInterface extends \Psr\Container\ContainerInterface
      * @param callable $callable Arbitrary callable.
      * @param mixed ...$parameters Arbitrary set of parameters to pass to the invokation.
      * @return mixed Callable invokation return value.
-     * @throws \N7e\DependencyInjection\CircularDependencyReferenceException
+     * @throws \N7e\DependencyInjection\CircularReferenceException
      *     When attempting to inject a dependency with a circular reference.
-     * @throws \N7e\DependencyInjection\DependencyNotFoundException When a required dependency cannot be resolved.
-     * @throws \N7e\DependencyInjection\DependencyLifetimeException
+     * @throws \N7e\DependencyInjection\NotFoundException When a required dependency cannot be resolved.
+     * @throws \N7e\DependencyInjection\LifetimeViolationException
      *     When attempting to inject a dependency with a shorter lifetime.
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function invoke(callable $callable, ...$parameters);
+
+    /**
+     * Begin a new scope.
+     *
+     * This "flushes" any scoped dependencies so that if requested again they are recreated.
+     */
+    public function beginScope(): void;
 }

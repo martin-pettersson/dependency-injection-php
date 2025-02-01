@@ -11,9 +11,12 @@ declare(strict_types=1);
 
 namespace N7e\DependencyInjection;
 
-use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use RuntimeException;
 
-class CircularDependencyReferenceException extends RuntimeException implements ContainerExceptionInterface
+/**
+ * Represents an exception thrown when an entry cannot be resolved.
+ */
+class NotFoundException extends RuntimeException implements NotFoundExceptionInterface
 {
 }

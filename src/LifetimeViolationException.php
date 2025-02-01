@@ -14,6 +14,10 @@ namespace N7e\DependencyInjection;
 use Psr\Container\ContainerExceptionInterface;
 use RuntimeException;
 
-class DuplicateDependencyIdentifierException extends RuntimeException implements ContainerExceptionInterface
+/**
+ * Represents an exception thrown when the lifetime of an entry exceeds that of
+ * one or more of its dependencies.
+ */
+class LifetimeViolationException extends RuntimeException implements ContainerExceptionInterface
 {
 }

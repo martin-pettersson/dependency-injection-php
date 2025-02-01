@@ -19,13 +19,13 @@ interface ContainerBuilderInterface
     /**
      * Configures a class dependency.
      *
-     * @param string $class_name Fully qualified class name.
+     * @param string $className Fully qualified class name.
      * @return \N7e\DependencyInjection\DependencyDefinitionInterface
      *     A reference to the configured dependency definition.
-     * @throws \N7e\DependencyInjection\DuplicateDependencyIdentifierException
+     * @throws \N7e\DependencyInjection\DuplicateIdentifierException
      *     If a dependency for the given class is already configured.
      */
-    public function addClass(string $class_name): DependencyDefinitionInterface;
+    public function addClass(string $className): DependencyDefinitionInterface;
 
     /**
      * Configures a factory dependency for the given identifier.
@@ -34,7 +34,7 @@ interface ContainerBuilderInterface
      * @param callable $factory Arbitrary factory.
      * @return \N7e\DependencyInjection\DependencyDefinitionInterface
      *     A reference to the configured dependency definition.
-     * @throws \N7e\DependencyInjection\DuplicateDependencyIdentifierException
+     * @throws \N7e\DependencyInjection\DuplicateIdentifierException
      *     If a dependency for the given identifier is already configured.
      */
     public function addFactory(string $identifier, callable $factory): DependencyDefinitionInterface;

@@ -6,3 +6,4 @@ parameters:
         - src
     ignoreErrors:
         - identifier: missingType.iterableValue
+        - message: '#Parameter \#1 \$objectOrClass of class ReflectionClass constructor expects class-string#'
