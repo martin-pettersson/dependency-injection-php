@@ -67,7 +67,7 @@ class ContainerBuilder implements ContainerBuilderInterface
     public function configure(string $identifier): ?DependencyDefinitionInterface
     {
         foreach ($this->dependencies as $dependency) {
-            if ($dependency->identifier() === $identifier) {
+            if ($dependency->identifier === $identifier) {
                 return $dependency;
             }
         }
@@ -91,7 +91,7 @@ class ContainerBuilder implements ContainerBuilderInterface
     public function assertAvailabilityOf(string $identifier): void
     {
         foreach ($this->dependencies as $dependency) {
-            if ($dependency->identifier() === $identifier || in_array($identifier, $dependency->aliases(), true)) {
+            if ($dependency->identifier === $identifier || in_array($identifier, $dependency->aliases(), true)) {
                 throw new DuplicateIdentifierException($identifier);
             }
         }

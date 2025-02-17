@@ -9,7 +9,7 @@
 
 namespace N7e\DependencyInjection\Fixtures;
 
-class IndirectCircularOne
+readonly class IndirectCircularOne
 {
     public IndirectCircularTwo $indirectCircularTwo;
 

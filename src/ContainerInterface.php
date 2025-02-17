@@ -33,7 +33,7 @@ interface ContainerInterface extends \Psr\Container\ContainerInterface
      *     When attempting to inject a dependency with a shorter lifetime.
      * @throws \Psr\Container\ContainerExceptionInterface
      */
-    public function construct(string $className, ...$parameters);
+    public function construct(string $className, ...$parameters): mixed;
 
     /**
      * Invoke a given callable resolving any required parameters.
@@ -48,7 +48,7 @@ interface ContainerInterface extends \Psr\Container\ContainerInterface
      *     When attempting to inject a dependency with a shorter lifetime.
      * @throws \Psr\Container\ContainerExceptionInterface
      */
-    public function invoke(callable $callable, ...$parameters);
+    public function invoke(callable $callable, ...$parameters): mixed;
 
     /**
      * Begin a new scope.

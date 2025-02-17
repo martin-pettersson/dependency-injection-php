@@ -79,7 +79,7 @@ class Container implements ContainerInterface
     }
 
     /** {@inheritDoc} */
-    public function get($id)
+    public function get($id): mixed
     {
         $definition = $this->dependencyDefinitionFor($id);
 
@@ -87,10 +87,10 @@ class Container implements ContainerInterface
             throw new NotFoundException("Dependency definition for '{$id}' not found");
         }
 
-        if (in_array($definition->identifier(), $this->getDependencyStack, true)) {
+        if (in_array($definition->identifier, $this->getDependencyStack, true)) {
             $this->getDependencyStack = [];
 
-            throw new CircularReferenceException($definition->identifier());
+            throw new CircularReferenceException($definition->identifier);
         }
 
         if (! is_null($cachedValue = $this->cached($definition))) {
@@ -98,10 +98,10 @@ class Container implements ContainerInterface
         }
 
         $this->ensureLifetimeExpectancyOf($definition);
-        $this->getDependencyStack[] = $definition->identifier();
+        $this->getDependencyStack[] = $definition->identifier;
 
         try {
-            $value = $this->invoke($definition->factory(), $this, []);
+            $value = $this->invoke($definition->factory, $this, []);
 
             $this->cache($value, $definition);
 
@@ -112,7 +112,7 @@ class Container implements ContainerInterface
     }
 
     /** {@inheritDoc} */
-    public function construct(string $className, ...$parameters)
+    public function construct(string $className, ...$parameters): mixed
     {
         if (in_array($className, $this->constructDependencyStack, true)) {
             $this->constructDependencyStack = [];
@@ -142,9 +142,12 @@ class Container implements ContainerInterface
     }
 
     /** {@inheritDoc} */
-    public function invoke(callable $callable, ...$parameters)
+    public function invoke(callable $callable, ...$parameters): mixed
     {
-        // The 'callable' type hint ensures that only existing functions can be passed.
+        /*
+         * The 'callable' type hint ensures that only existing functions can be
+         * passed so there's no need to check for that exception.
+         */
         $reflection = new ReflectionFunction($callable(...));
 
         if ($reflection->getNumberOfParameters() === 0) {
@@ -169,7 +172,7 @@ class Container implements ContainerInterface
     private function dependencyDefinitionFor(string $identifier): ?DependencyDefinition
     {
         foreach ($this->dependencies as $dependency) {
-            if ($dependency->identifier() === $identifier || in_array($identifier, $dependency->aliases(), true)) {
+            if ($dependency->identifier === $identifier || in_array($identifier, $dependency->aliases(), true)) {
                 return $dependency;
             }
         }
@@ -203,7 +206,7 @@ class Container implements ContainerInterface
      * @throws \Psr\Container\NotFoundExceptionInterface
      * @throws \Psr\Container\ContainerExceptionInterface
      */
-    private function resolve(ReflectionParameter $parameter)
+    private function resolve(ReflectionParameter $parameter): mixed
     {
         if ($parameter->isOptional()) {
             return $parameter->getDefaultValue();
@@ -217,7 +220,7 @@ class Container implements ContainerInterface
         $attribute = current($parameter->getAttributes(Inject::class));
 
         if ($attribute !== false) {
-            return $this->get($attribute->newInstance()->identifier());
+            return $this->get($attribute->newInstance()->identifier);
         }
 
         $type = $parameter->getType();
@@ -246,7 +249,7 @@ class Container implements ContainerInterface
             if ($definition->lifetime() < $this->dependencyDefinitionFor($identifier)?->lifetime()) {
                 $this->getDependencyStack = [];
 
-                throw new LifetimeViolationException($definition->identifier());
+                throw new LifetimeViolationException($definition->identifier);
             }
         }
     }
@@ -257,14 +260,14 @@ class Container implements ContainerInterface
      * @param \N7e\DependencyInjection\DependencyDefinition $definition Arbitrary dependency definition.
      * @return mixed|null Cached value if found.
      */
-    private function cached(DependencyDefinition $definition)
+    private function cached(DependencyDefinition $definition): mixed
     {
-        if (array_key_exists($definition->identifier(), $this->singletonDependencyValues)) {
-            return $this->singletonDependencyValues[$definition->identifier()];
+        if (array_key_exists($definition->identifier, $this->singletonDependencyValues)) {
+            return $this->singletonDependencyValues[$definition->identifier];
         }
 
-        if (array_key_exists($definition->identifier(), $this->scopedDependencyValues)) {
-            return $this->scopedDependencyValues[$definition->identifier()];
+        if (array_key_exists($definition->identifier, $this->scopedDependencyValues)) {
+            return $this->scopedDependencyValues[$definition->identifier];
         }
 
         return null;
@@ -276,14 +279,14 @@ class Container implements ContainerInterface
      * @param mixed $value Arbitrary value.
      * @param \N7e\DependencyInjection\DependencyDefinition $definition Arbitrary dependency definition.
      */
-    private function cache($value, DependencyDefinition $definition): void
+    private function cache(mixed $value, DependencyDefinition $definition): void
     {
         if ($definition->lifetime() === DependencyLifetime::SINGLETON) {
-            $this->singletonDependencyValues[$definition->identifier()] = $value;
+            $this->singletonDependencyValues[$definition->identifier] = $value;
         }
 
         if ($definition->lifetime() === DependencyLifetime::SCOPED) {
-            $this->scopedDependencyValues[$definition->identifier()] = $value;
+            $this->scopedDependencyValues[$definition->identifier] = $value;
         }
     }
 }

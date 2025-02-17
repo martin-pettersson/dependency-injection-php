@@ -58,7 +58,7 @@ class ContainerTest extends TestCase
         $this->assertFalse($this->container->has('v'));
 
         current(
-            array_filter($this->dependencies, static fn($dependency) => $dependency->identifier() === 'value')
+            array_filter($this->dependencies, static fn($dependency) => $dependency->identifier === 'value')
         )->alias('v');
 
         $this->assertTrue($this->container->has('v'));
@@ -90,7 +90,7 @@ class ContainerTest extends TestCase
     public function shouldProduceValueForAlias(): void
     {
         current(
-            array_filter($this->dependencies, static fn($dependency) => $dependency->identifier() === 'value')
+            array_filter($this->dependencies, static fn($dependency) => $dependency->identifier === 'value')
         )->alias('v');
 
         $this->assertEquals($this->value, $this->container->get('v'));

@@ -9,7 +9,7 @@
 
 namespace N7e\DependencyInjection\Fixtures;
 
-class B
+readonly class B
 {
     public A $a;
 

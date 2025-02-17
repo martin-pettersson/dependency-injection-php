@@ -27,7 +27,7 @@ class Inject
      *
      * @var string
      */
-    private string $identifier;
+    public readonly string $identifier;
 
     /**
      * Create a new attribute instance.
@@ -37,15 +37,5 @@ class Inject
     public function __construct(string $identifier)
     {
         $this->identifier = $identifier;
-    }
-
-    /**
-     * Retrieve dependency identifier.
-     *
-     * @return string Dependency identifier.
-     */
-    public function identifier(): string
-    {
-        return $this->identifier;
     }
 }

@@ -9,7 +9,7 @@
 
 namespace N7e\DependencyInjection\Fixtures;
 
-class Remaining
+readonly class Remaining
 {
     public string $first;
     public A $a;

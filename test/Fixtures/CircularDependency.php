@@ -9,7 +9,7 @@
 
 namespace N7e\DependencyInjection\Fixtures;
 
-class CircularDependency
+readonly class CircularDependency
 {
     public CircularDependency $circularDependency;
 

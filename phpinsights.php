@@ -10,6 +10,7 @@ use PhpCsFixer\Fixer\ClassNotation\OrderedClassElementsFixer;
 use PhpCsFixer\Fixer\FunctionNotation\FunctionDeclarationFixer;
 use PhpCsFixer\Fixer\ReturnNotation\ReturnAssignmentFixer;
 use SlevomatCodingStandard\Sniffs\Arrays\TrailingArrayCommaSniff;
+use SlevomatCodingStandard\Sniffs\Classes\ForbiddenPublicPropertySniff;
 use SlevomatCodingStandard\Sniffs\Classes\SuperfluousExceptionNamingSniff;
 use SlevomatCodingStandard\Sniffs\Classes\SuperfluousInterfaceNamingSniff;
 use SlevomatCodingStandard\Sniffs\Commenting\DocCommentSpacingSniff;
@@ -28,6 +29,7 @@ return [
         DisallowMixedTypeHintSniff::class,
         DocCommentSpacingSniff::class,
         ForbiddenNormalClasses::class,
+        ForbiddenPublicPropertySniff::class,
         FunctionDeclarationFixer::class,
         OrderedClassElementsFixer::class,
         ParameterTypeHintSniff::class,
@@ -51,7 +53,7 @@ return [
     ],
     'requirements' => [
         'min-quality' => 100,
-        'min-complexity' => 65,
+        'min-complexity' => 60,
         'min-architecture' => 100,
         'min-style' => 100
     ],

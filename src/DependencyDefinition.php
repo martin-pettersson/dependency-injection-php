@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace N7e\DependencyInjection;
 
+use Closure;
+
 /**
  * Dependency definition implementation.
  */
@@ -21,21 +23,21 @@ class DependencyDefinition implements DependencyDefinitionInterface
      *
      * @var string
      */
-    private string $identifier;
+    public readonly string $identifier;
 
     /**
      * Value factory.
      *
-     * @var callable
+     * @var \Closure
      */
-    private $factory;
+    public readonly Closure $factory;
 
     /**
      * Container builder instance.
      *
      * @var \N7e\DependencyInjection\ContainerBuilder
      */
-    private ContainerBuilder $containerBuilder;
+    private readonly ContainerBuilder $containerBuilder;
 
     /**
      * Lifetime of the dependency in the container {@see \N7e\DependencyInjection\DependencyLifetime}.
@@ -61,7 +63,7 @@ class DependencyDefinition implements DependencyDefinitionInterface
     public function __construct(string $identifier, callable $factory, ContainerBuilder $containerBuilder)
     {
         $this->identifier = $identifier;
-        $this->factory = $factory;
+        $this->factory = $factory(...);
         $this->containerBuilder = $containerBuilder;
         $this->lifetime = DependencyLifetime::TRANSIENT;
         $this->aliases = [];
@@ -99,26 +101,6 @@ class DependencyDefinition implements DependencyDefinitionInterface
         $this->aliases[] = $alias;
 
         return $this;
-    }
-
-    /**
-     * Retrieve the dependency identifier.
-     *
-     * @return string Unique identifier.
-     */
-    public function identifier(): string
-    {
-        return $this->identifier;
-    }
-
-    /**
-     * Retrieve the dependency value factory.
-     *
-     * @return callable Value factory.
-     */
-    public function factory(): callable
-    {
-        return $this->factory;
     }
 
     /**

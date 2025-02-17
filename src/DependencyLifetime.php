@@ -21,15 +21,15 @@ class DependencyLifetime
     /**
      * Always created when requested.
      */
-    public const TRANSIENT = 0;
+    public const int TRANSIENT = 0;
 
     /**
      * Created only once per scope.
      */
-    public const SCOPED = 1;
+    public const int SCOPED = 1;
 
     /**
      * Only created once.
      */
-    public const SINGLETON = 2;
+    public const int SINGLETON = 2;
 }
